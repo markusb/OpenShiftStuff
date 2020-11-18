@@ -2,6 +2,10 @@
 
 echo "Create OpenShift cluster"
 
+# install-config-base.yaml
+# https://cloud.redhat.com/openshift/install/metal/user-provisioned
+export PULL_SECRET="pull-secret.txt"
+export YAML_CONFIG_BASE="install-config-base.yaml"
 export REGUSER="myuser"
 export REGPASS="mypass123"
 export REGAUTH=$(echo -n "$REGUSER:$REGPASS" | base64 -w0)
@@ -14,6 +18,17 @@ export PRODUCT_REPO="openshift-release-dev"
 export LOCAL_SECRET_JSON="/root/ocp4/pull-secret-local.text"
 export RELEASE_NAME="ocp-release"
 export ARCHITECTURE="x86_64"
+
+if [ ! -f "$PULL_SECRET" ]
+then
+    echo "Missing $PULL_SECRET, please download from https://cloud.redhat.com/openshift/install/metal/user-provisioned"
+    exit 1
+fi
+if [ ! -f "$YAML_CONFIG_BASE" ]
+then
+    echo "Missing $YAML_CONFIG_BASE"
+    exit 1
+fi
 
 echo "Registry user: $REGUSER"
 echo "Registry password: $REGPASS"
@@ -59,7 +74,7 @@ podman ps
 
 echo "Create /root/ocp4/pull-secret-local.text from pull-secret.txt with auth info for $BAFQDN:5000"
 mkdir /root/ocp4
-jq < pull-secret.txt '.auths."'$BAFQDN':5000" = { email: "my@email", auth: "'$REGAUTH'" }' > /root/ocp4/pull-secret-local.text
+jq < $PULL_SECRET '.auths."'$BAFQDN':5000" = { email: "my@email", auth: "'$REGAUTH'" }' > /root/ocp4/pull-secret-local.text
 
 echo "Run oc adm -a"
 oc adm -a ${LOCAL_SECRET_JSON} release mirror --from=quay.io/${PRODUCT_REPO}/${RELEASE_NAME}:${OCP_RELEASE}-${ARCHITECTURE} --to=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY} --to-release-image=${LOCAL_REGISTRY}/${LOCAL_REPOSITORY}:${OCP_RELEASE} --insecure=true | tee oc-adm.out
