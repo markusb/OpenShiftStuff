@@ -95,6 +95,13 @@ cp -v *.ign /var/www/html/openshift4/$OCP_RELEASE/ignitions/
 chmod 644 /var/www/html/openshift4/$OCP_RELEASE/ignitions/*.ign
 restorecon -RFv /var/www/html/
 
-echo "Finished"
+echo "Installation preparation finished"
+echo "Next steps:"
+echo "- Install cluster nodes: /usr/local/sbin/create-ocp-cluster.sh"
+echo "- Wait for master nodes to come up: Check for them with 'oc get nodes'"
+echo "- Run potinstall script: /usr/local/sbin/oc-cluster-postinstall.sh"
 
+# oc adm catalog build --appregistry-org redhat-operators --from=registry.redhat.io/openshift4/ose-operator-registry:v4.5 --to=${LOCAL_REGISTRY}/olm/redhat-operators:v1 --registry-config=${LOCAL_SECRET_JSON} --filter-by-os="linux/amd64" --insecure
+# oc adm catalog mirror ${LOCAL_REGISTRY}/olm/redhat-operators:v1 ${LOCAL_REGISTRY} --registry-config=${LOCAL_SECRET_JSON} --insecure
+# oc patch OperatorHub cluster --type json -p '[{"op": "add", "path": "/spec/disableAllDefaultSources", "value": true}]'
 
